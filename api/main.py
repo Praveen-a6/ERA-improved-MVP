@@ -1,12 +1,15 @@
+# api/main.py
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from pydantic import BaseModel
 from typing import Any
 from db.storage import (init_db, get_experiment_history, get_best_node, get_experiment_tree, 
-                        get_all_experiments, get_node_details, get_experiment_details, delete_experiment, update_experiment_status)
+                        get_all_experiments, get_node_details, get_experiment_details, delete_experiment, 
+                        update_experiment_status)
 from api.worker import celery_app
 import shutil
 import os
 import pandas as pd
+import io
 
 app = FastAPI(title="ERA-Lite API")
 
@@ -16,27 +19,15 @@ def startup():
     os.makedirs("/app/datasets", exist_ok=True)
     os.makedirs("/app/experiments", exist_ok=True)
 
-class TestCase(BaseModel):
-    inputs: dict
-    expected: Any
-
 class ExperimentRequest(BaseModel):
     problem: str
     function_name: str
-    test_cases: list[TestCase]
 
 @app.post("/api/run")
 def run_experiment_endpoint(req: ExperimentRequest):
-    test_lines = ["# ── TEST RUNNER ──────────────────────────────────────"]
-    for i, tc in enumerate(req.test_cases):
-        inputs_str = ", ".join([f"{k}={v!r}" for k, v in tc.inputs.items()])
-        test_lines.append(f"result_{i} = {req.function_name}({inputs_str})")
-        test_lines.append(f"print('PASS' if result_{i} == {tc.expected!r} else f'FAIL (got {{result_{i}}}, expected {tc.expected!r})')")
-    test_runner = "\n".join(test_lines)
-
     task = celery_app.send_task(
         "run_dsa_task",
-        kwargs={"problem": req.problem, "function_name": req.function_name, "test_runner": test_runner}
+        kwargs={"problem": req.problem, "function_name": req.function_name}
     )
     return {"status": "queued", "task_id": task.id, "message": "Experiment is queued in Celery."}
 
@@ -44,9 +35,9 @@ def run_experiment_endpoint(req: ExperimentRequest):
 def run_dataset_endpoint(
     problem: str = Form(...),
     metric: str = Form(...),
+    iterations: int = Form(5), # Accept iterations
     file: UploadFile = File(...)
 ):
-    # 1. Save to the shared volume inside the container
     container_file_path = f"/app/datasets/{file.filename}"
     with open(container_file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
@@ -55,11 +46,16 @@ def run_dataset_endpoint(
     try:
         df = pd.read_csv(container_file_path)
         preview_str = df.head(5).to_string(index=False)
-        enhanced_problem = f"{problem}\n\nDataset Preview (First 5 rows):\n{preview_str}"
+        
+        buffer = io.StringIO()
+        df.info(buf=buffer)
+        info_str = buffer.getvalue()
+        null_counts = df.isnull().sum().to_string()
+        
+        enhanced_problem = f"{problem}\n\nDataset Preview (First 5 rows):\n{preview_str}\n\nDataset Info:\n{info_str}\n\nMissing Values Per Column:\n{null_counts}"
     except Exception:
         enhanced_problem = problem
 
-    # 2. Construct the HOST path to pass to the Celery Worker
     host_dir = os.getenv("HOST_PROJECT_DIR", os.getcwd())
     host_file_path = os.path.join(host_dir, "datasets", file.filename).replace("\\", "/")
 
@@ -70,7 +66,8 @@ def run_dataset_endpoint(
             "metric": metric, 
             "data_path": host_file_path, 
             "dataset_preview": preview_str,
-            "db_problem": problem
+            "db_problem": problem,
+            "iterations": iterations
         }
     )
     return {"status": "queued", "task_id": task.id, "message": "Dataset experiment is queued in Celery."}

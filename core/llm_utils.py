@@ -19,7 +19,7 @@ def llm_call(**kwargs):
             if "model" not in kwargs:
                 kwargs["model"] = MODEL
             response = client.chat.completions.create(**kwargs)
-            time.sleep(2.0) # Fast polling for paid APIs, change to 2.0 for free tiers
+            time.sleep(0.1) # Fast polling for paid APIs, change to 2.0 for free tiers
             return response
         except Exception as e:
             if "429" in str(e) or "Too Many Requests" in str(e):

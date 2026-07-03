@@ -177,6 +177,10 @@ def save_memory(experiment_id, node_id, problem_summary, algorithm_tags, code_sn
     return mem_id
 
 def retrieve_memory(query_tags: list[str], limit: int = 3) -> list[dict]:
+    # FIX: If no tags are extracted, return empty list to avoid SQL syntax error
+    if not query_tags:
+        return []
+        
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
