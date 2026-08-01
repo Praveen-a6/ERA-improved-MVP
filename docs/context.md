@@ -1,3 +1,9 @@
+Here is the fully updated `CONTEXT.md` file. It reflects the final evolutionary step of the project, including the transition to autonomous traceback debugging (removing the `try/except` training wheels), the addition of the data profiler, the iteration slider, and DeepSeek integration.
+
+```markdown
+# ERA-Lite — Project Context for New Chat
+
+> Paste this entire file at the start of any new conversation to restore full project context.
 
 ***
 
@@ -7,7 +13,7 @@ ERA-Lite is a **direct improvement** on Google's ERA system (published Nature 20
 
 > *"ERA is powerful but impractical. We make it practical without sacrificing the core optimization loop."*
 
-**Core thesis**: A single engineer with free-tier LLMs and a laptop can build an autonomous research optimization system that outperforms Google's ERA on cost, speed, and practical utility — by replacing expensive infrastructure with intelligent agents, memory, and simpler deployment.
+**Core thesis**: A single engineer with free-tier or paid LLMs and a laptop can build an autonomous research optimization system that outperforms Google's ERA on cost, speed, and practical utility — by replacing expensive infrastructure with intelligent agents, memory, and simpler deployment.
 
 ***
 
@@ -17,7 +23,7 @@ ERA is **not** mainly a DSA/LeetCode system. DSA problems are used for prototypi
 
 ***
 
-## Current Status — Phase 4 Complete (Production Distributed Stack & UX Polish)
+## Current Status — Phase 5 Complete (Production Distributed Stack & Autonomous ML)
 
 ### What is working right now
 - **Distributed Architecture**: Fully containerized using `docker-compose`. 
@@ -26,10 +32,10 @@ ERA is **not** mainly a DSA/LeetCode system. DSA problems are used for prototypi
 - **Graceful Cancellation**: Users can click "Cancel Run" in the UI. The ManagerAgent checks a DB status flag between iterations and stops safely without crashing Celery.
 - **Docker-in-Docker Path Resolution**: `ExecutorAgent` correctly maps container paths to host paths using `HOST_PROJECT_DIR` so the Celery Worker can spawn sandbox containers.
 - **Clean Structure**: Codebase split into `api/`, `core/`, `db/`, `ui/` packages.
-- **Provider Agnostic**: LLM provider (OpenAI/NVIDIA) configured entirely via `.env`.
+- **Provider Agnostic**: LLM provider (DeepSeek/OpenAI/NVIDIA) configured entirely via `.env`.
 - **Multi-Agent PUCT Search**: `ManagerAgent` orchestrates `Generator`, `Executor`, and `Critic` agents using True PUCT math (balancing exploitation and exploration).
-- **Dataset ML Mode**: Auto-detects metrics, injects 5-row CSV preview into LLM context, writes full XGBoost/sklearn pipelines with `try/except` self-debugging.
-- **Research IDE UI**: Streamlit dashboard with interactive tree map (breakthrough edges, crown node), AI reasoning logs, and CSV previews.
+- **Autonomous ML Mode**: Auto-detects metrics, injects 5-row CSV preview AND data profiling (`df.info()` and `df.isnull().sum()`) into LLM context. Features autonomous debugging via full Python tracebacks.
+- **Research IDE UI**: Streamlit dashboard with interactive tree map (breakthrough edges, crown node), AI reasoning logs, CSV previews, and an **Iteration Slider** for cost/time control.
 - **Fat ML Sandbox**: Isolated Docker execution with `numpy`, `pandas`, `scikit-learn`, `xgboost`, `lightgbm` (no network access).
 
 ***
@@ -40,10 +46,15 @@ The system is provider-agnostic. It uses the OpenAI SDK but can hit any compatib
 
 ### `.env` Configuration
 ```env
-# For OpenAI:
-LLM_BASE_URL=https://api.openai.com/v1
+# For DeepSeek:
+LLM_BASE_URL=https://api.deepseek.com/v1
 LLM_API_KEY=sk-xxxxxxxxxxxx
-LLM_MODEL=gpt-4o
+LLM_MODEL=deepseek-v4-flash
+
+# For OpenAI:
+# LLM_BASE_URL=https://api.openai.com/v1
+# LLM_API_KEY=sk-xxxxxxxxxxxx
+# LLM_MODEL=gpt-4o
 
 # For NVIDIA NIM (Free Tier):
 # LLM_BASE_URL=https://integrate.api.nvidia.com/v1
@@ -56,7 +67,7 @@ REDIS_URL=redis://redis:6379/0
 # Docker-in-Docker Host Path (Crucial for mounting sandbox volumes)
 HOST_PROJECT_DIR=C:/Users/YourName/Path/To/ERA-Lite-Final
 ```
-*Note: `llm_utils.py` includes an aggressive exponential backoff wrapper `[5, 15, 30, 60]` for 429 errors.*
+*Note: `llm_utils.py` includes an aggressive exponential backoff wrapper `[5, 15, 30, 60]` for 429 errors. For paid APIs like DeepSeek, the post-call delay is reduced to `0.1s` for blazing-fast search.*
 
 ***
 
@@ -65,7 +76,7 @@ HOST_PROJECT_DIR=C:/Users/YourName/Path/To/ERA-Lite-Final
 ```text
 ERA-Lite-Final/
 ├── api/                  # FastAPI Backend & Celery Worker
-│   ├── main.py           # API endpoints & file upload handling
+│   ├── main.py           # API endpoints, file upload handling, data profiling
 │   └── worker.py         # Celery task queue (soft_time_limit=1200s)
 ├── core/                 # Core AI Logic & Agents
 │   ├── agents.py         # Multi-Agent system + PUCT Node Pool + Docker execution
@@ -77,7 +88,7 @@ ERA-Lite-Final/
 ├── db/                   # Database logic
 │   └── storage.py        # SQLite (experiments, nodes, memory, tree)
 ├── ui/                   # Streamlit Frontend
-│   └── main.py           # Research IDE Dashboard (Tree, Inspector, Cancel Button)
+│   └── main.py           # Research IDE Dashboard (Tree, Inspector, Cancel, Slider)
 ├── sandbox/              # Dockerfile for ML sandbox
 ├── .env.example
 ├── .gitignore
@@ -94,7 +105,7 @@ ERA-Lite-Final/
 ```text
 User UI (Streamlit)      ← submits DSA tests OR ML CSV dataset           ✅ Done
      ↓
-API Layer (FastAPI)      ← serializes task and pushes to Redis           ✅ Done
+API Layer (FastAPI)      ← serializes task, profiles data, pushes to Redis ✅ Done
      ↓
 Celery Worker            ← picks up task, runs ManagerAgent              ✅ Done
      ↓
@@ -124,8 +135,8 @@ Storage (SQLite)         ← saves nodes, builds tree, saves memory        ✅ D
 - Memory across experiments via SQLite (saves winning DSA & ML pipelines)
 - Critic Agent against reward hacking
 - Fat Docker sandbox (runs XGBoost/LightGBM) on a single laptop
-- Provider-agnostic (OpenAI or free NVIDIA NIM)
-- ML-ready continuous scoring (`SCORE: X.XX`) with `try/except` self-debugging
+- Provider-agnostic (DeepSeek, OpenAI, or free NVIDIA NIM)
+- ML-ready continuous scoring (`SCORE: X.XX`) with autonomous traceback debugging
 - FastAPI + Celery + Streamlit Full-Stack Distributed UI with Graceful Cancellation
 
 ***
@@ -141,7 +152,7 @@ Storage (SQLite)         ← saves nodes, builds tree, saves memory        ✅ D
 | 10 | PUCT Algorithm + Research IDE UI + ML Testing | ✅ Done |
 | 11 | Auto-Detect Metrics, Data Preview, AI Reasoning Logs, UI Polish | ✅ Done |
 | 12 | Production stack (Celery, Redis, Docker Compose) | ✅ Done |
-| 13 | Graceful Cancel, Path Mismatch Fixes, Self-Debugging Prompts | ✅ Done |
+| 13 | Graceful Cancel, Path Mismatch Fixes, Autonomous Traceback Debugging | ✅ Done |
 | 14 | CI/CD (GitHub Actions) & Auth (JWT) | ⬜ Future |
 
 ***
@@ -152,14 +163,15 @@ Storage (SQLite)         ← saves nodes, builds tree, saves memory        ✅ D
 |---|---|
 | True PUCT Expandable Node Pool | Balances exploitation (mutating high scores) and exploration (trying unvisited nodes) to avoid local optima, exactly like Google's ERA. |
 | Fat ML Docker Image | Allows execution of numpy, pandas, scikit-learn, xgboost without network access inside the sandbox. |
-| Inject 5-Row CSV Preview into Prompt | Gives the LLM zero-shot understanding of column names and data types without needing to manually specify schema. |
-| Auto-Detect Metric | AI reads the problem and data preview, deciding autonomously whether to print `SCORE: {accuracy}` or `SCORE: {r2_score}`. |
+| Autonomous Data Profiling | The API generates `df.info()` and `df.isnull().sum()` and injects it into the prompt, giving the AI zero-shot understanding of schema and data health. |
+| Auto-Detect Metric | AI reads the problem and data profile, deciding autonomously whether to print `SCORE: {accuracy}` or `SCORE: {r2_score}`. |
 | Store AI "Reasoning" per Node | Provides full transparency in the UI so researchers can see *why* a mutation was chosen. |
-| Separate DB Context from LLM Context | The DB stores clean problem statements; the LLM receives enhanced prompts with data previews. |
+| Separate DB Context from LLM Context | The DB stores clean problem statements; the LLM receives enhanced prompts with data profiles. |
 | Celery + Redis Queue | Decouples long-running AI search from the FastAPI event loop, making the system fault-tolerant. |
-| `try/except` Self-Debugging | ML pipelines catch their own errors and print `SCORE: 0.0`, allowing the mutation engine to read the traceback and fix the bug in the next iteration instead of crashing. |
+| Autonomous Traceback Debugging | Instead of forcing `try/except` blocks (which hid errors), the ExecutorAgent lets the code crash naturally and captures the full Python Traceback, passing it back to the LLM for genuine autonomous debugging. |
 | `HOST_PROJECT_DIR` Mapping | Solves the Docker-in-Docker path mismatch so the Celery Worker container can tell the host Docker daemon exactly where to mount the sandbox files. |
 | Graceful Cancel Flag | Users can stop an experiment. The ManagerAgent checks the DB status between iterations and breaks the loop safely without killing the Celery process. |
+| Iteration Slider in UI | Gives the user direct control over API cost and search depth (e.g., 2 iterations for testing, 15 for exhaustive Kaggle search). |
 
 ***
 

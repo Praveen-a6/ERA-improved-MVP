@@ -102,7 +102,7 @@ if page == "📊 Experiment Workspace":
                                             size=35, 
                                             color="#fbbf24", 
                                             shape="diamond", 
-                                            font={'size': 16, 'color': '#000000', 'face': 'arial', 'bold': True}
+                                            font={'size': 16, 'color': "#FFFFFF", 'face': 'arial', 'bold': True}
                                         ))
                                     else:
                                         nodes.append(Node(
@@ -110,7 +110,7 @@ if page == "📊 Experiment Workspace":
                                             label=f"#{n['id']}\n{score:.2f}", 
                                             size=25, 
                                             color=color, 
-                                            font={'size': 14, 'color': '#000000', 'face': 'arial'}
+                                            font={'size': 14, 'color': "#FFFFFF", 'face': 'arial'}
                                         ))
                                     
                                     if n['parent_id']:
