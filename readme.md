@@ -1,11 +1,11 @@
 
-# 🧬 ERA-Lite: Autonomous Research Optimization System
+# ERA-Lite: Autonomous Research Optimization System
 
 ERA-Lite proves that a single engineer with an LLM API key and a laptop can build an autonomous research optimization system that outperforms Google's ERA on cost, speed, and practical utility — by replacing expensive infrastructure with intelligent agents, memory, and simpler deployment.
 
 Inspired by the [Nature 2026 ERA paper](https://www.nature.com/articles/s41586-026-10658-6), ERA-Lite converts software creation into a "scorable task." You provide a dataset and a metric to maximize, and the system uses LLM-driven tree search to autonomously generate, test, and mutate hundreds of software candidates until it finds the best one.
 
-## 🚀 Features
+## Features
 
 - **Distributed Async Architecture**: FastAPI offloads heavy AI search to Celery Workers via Redis. Long-running ML experiments persist in the queue even if the server restarts.
 - **Multi-Agent PUCT Search**: A `ManagerAgent` orchestrates specialized agents (Generator, Executor, Critic) using True PUCT math—balancing *exploitation* (mutating high scores) and *exploration* (trying unvisited nodes) to avoid local optima.
@@ -18,7 +18,7 @@ Inspired by the [Nature 2026 ERA paper](https://www.nature.com/articles/s41586-0
 - **Cross-Experiment Memory**: Saves winning ML pipelines and DSA algorithms to SQLite, injecting them as context for future problems.
 - **Fat ML Sandbox**: Untrusted LLM-generated code is executed in an isolated Docker container pre-loaded with `numpy`, `pandas`, `scikit-learn`, and `xgboost`—no network access required.
 
-## 🛠 Tech Stack
+## Tech Stack
 
 - **LLM Inference**: Provider-agnostic (DeepSeek / OpenAI / NVIDIA NIM)
 - **Backend**: FastAPI + Celery
@@ -27,7 +27,7 @@ Inspired by the [Nature 2026 ERA paper](https://www.nature.com/articles/s41586-0
 - **Database**: SQLite
 - **Orchestration**: Docker Compose
 
-## ⚙️ Setup & Installation
+## Setup & Installation
 
 1. **Clone the repository:**
    ```bash
@@ -56,7 +56,7 @@ Inspired by the [Nature 2026 ERA paper](https://www.nature.com/articles/s41586-0
    docker-compose up --build
    ```
 
-## 💻 Usage
+## Usage
 
 Once the stack is running, you can access the services at:
 - **Streamlit UI**: `http://localhost:8501`
